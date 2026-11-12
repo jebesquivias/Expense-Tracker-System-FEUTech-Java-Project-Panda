@@ -18,7 +18,7 @@ public abstract class Transaction {
     }
 
     public void setAmount(double amount) throws InvalidExpenseException {
-        if (amount <= 0) {
+        if (!Double.isFinite(amount) || amount <= 0) {
             throw new InvalidExpenseException("Amount must be greater than 0.");
         }
         this.amount = amount;
