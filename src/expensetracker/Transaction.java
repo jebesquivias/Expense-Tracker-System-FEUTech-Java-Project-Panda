@@ -18,8 +18,8 @@ public abstract class Transaction {
     }
 
     public void setAmount(double amount) throws InvalidExpenseException {
-        if (amount <= 0) {
-            throw new InvalidExpenseException("Amount must be greater than 0.");
+        if (Double.isNaN(amount) || Double.isInfinite(amount) || amount <= 0) {
+            throw new InvalidExpenseException("Amount must be a valid number greater than 0.");
         }
         this.amount = amount;
     }
@@ -28,12 +28,14 @@ public abstract class Transaction {
         return date;
     }
 
-    public void setDate(LocalDate date) {
-        if (date != null && !date.isAfter(LocalDate.now())) {
-            this.date = date;
-        } else {
-            this.date = LocalDate.now();
+    public void setDate(LocalDate date) throws InvalidExpenseException {
+        if (date == null) {
+            throw new InvalidExpenseException("Date cannot be empty.");
         }
+        if (date.isAfter(LocalDate.now())) {
+            throw new InvalidExpenseException("Expense date cannot be in the future.");
+        }
+        this.date = date;
     }
 
     public String getDescription() {
@@ -41,7 +43,7 @@ public abstract class Transaction {
     }
 
     public void setDescription(String description) {
-        this.description = (description == null) ? "" : description.trim();
+        this.description = (description == null) ? "" : description.trim().replace("|", "/");
     }
 
     public abstract String getSummary();
