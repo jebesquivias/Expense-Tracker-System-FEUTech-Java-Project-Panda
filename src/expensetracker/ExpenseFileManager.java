@@ -7,110 +7,68 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
-import java.util.List;
 
+// Handles saving and loading expense data to a text file (Module 7 & 8)
 public class ExpenseFileManager {
     private static final String FILE_NAME = "expenses.txt";
 
-    // Saves both Monthly Budget and Expenses list
+    // Save budget and all expenses to expenses.txt
     public static synchronized void saveToFile(ExpenseTracker tracker) throws IOException {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_NAME))) {
-            writer.write("BUDGET|" + tracker.getMonthlyBudget());
+        BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_NAME));
+        writer.write("BUDGET," + tracker.getMonthlyBudget());
+        writer.newLine();
+
+        for (Expense expense : tracker.getExpenses()) {
+            String safeDesc = expense.getDescription().replace(",", " ");
+            String line = expense.getDate() + ","
+                    + expense.getCategory().name() + ","
+                    + expense.getAmount() + ","
+                    + safeDesc;
+            writer.write(line);
             writer.newLine();
-            for (Expense expense : tracker.getExpenses()) {
-                writer.write(
-                    expense.getDate() + "|"
-                    + expense.getCategory().name() + "|"
-                    + expense.getAmount() + "|"
-                    + expense.getDescription()
-                );
-                writer.newLine();
-            }
         }
+        writer.close();
     }
 
-    // Backwards-compatible method for List<Expense>
-    public static synchronized void saveToFile(List<Expense> expenses) throws IOException {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_NAME))) {
-            for (Expense expense : expenses) {
-                writer.write(
-                    expense.getDate() + "|"
-                    + expense.getCategory().name() + "|"
-                    + expense.getAmount() + "|"
-                    + expense.getDescription()
-                );
-                writer.newLine();
-            }
-        }
-    }
-
+    // Load budget and expenses from expenses.txt
     public static synchronized void loadFromFile(ExpenseTracker tracker) throws IOException, InvalidExpenseException {
         File file = new File(FILE_NAME);
         if (!file.exists()) {
             return;
         }
+
         tracker.getExpenses().clear();
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.startsWith("BUDGET|")) {
-                    tracker.setMonthlyBudget(Double.parseDouble(line.substring(7)));
-                    continue;
-                }
-                String[] parts = line.split("\\|", 4);
+        BufferedReader reader = new BufferedReader(new FileReader(file));
+        String line;
+
+        while ((line = reader.readLine()) != null) {
+            if (line.startsWith("BUDGET,")) {
+                String budgetText = line.substring(7);
+                tracker.setMonthlyBudget(Double.parseDouble(budgetText));
+            } else {
+                String[] parts = line.split(",", 4);
                 if (parts.length == 4) {
-                    double amount = Double.parseDouble(parts[2]);
                     LocalDate date = LocalDate.parse(parts[0]);
                     ExpenseCategory category = ExpenseCategory.valueOf(parts[1]);
+                    double amount = Double.parseDouble(parts[2]);
                     String description = parts[3];
                     tracker.addExpense(new Expense(amount, date, description, category));
                 }
             }
-        } catch (IllegalArgumentException | DateTimeParseException ex) {
-            throw new InvalidExpenseException("Corrupted data in expenses.txt: " + ex.getMessage());
         }
+        reader.close();
     }
 
-    // Background thread save for ExpenseTracker (saves budget + expenses)
-    public static void saveInBackground(ExpenseTracker tracker, Runnable onComplete) {
-        List<Expense> snapshot = new ArrayList<>(tracker.getExpenses());
-        double budgetSnapshot = tracker.getMonthlyBudget();
-        Thread saveThread = new Thread(() -> {
-            try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_NAME))) {
-                writer.write("BUDGET|" + budgetSnapshot);
-                writer.newLine();
-                for (Expense expense : snapshot) {
-                    writer.write(
-                        expense.getDate() + "|"
-                        + expense.getCategory().name() + "|"
-                        + expense.getAmount() + "|"
-                        + expense.getDescription()
-                    );
-                    writer.newLine();
+    // Save file using a separate background thread (Module 7: Multithreading)
+    public static void saveInBackground(final ExpenseTracker tracker) {
+        Thread saveThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    saveToFile(tracker);
+                } catch (IOException e) {
+                    System.out.println("Auto-save error: " + e.getMessage());
                 }
-                if (onComplete != null) {
-                    onComplete.run();
-                }
-            } catch (IOException ex) {
-                System.err.println("Background save failed: " + ex.getMessage());
-            }
-        });
-        saveThread.start();
-    }
-
-    // Backwards-compatible background save for List<Expense>
-    public static void saveInBackground(List<Expense> expenses, Runnable onComplete) {
-        List<Expense> snapshot = new ArrayList<>(expenses);
-        Thread saveThread = new Thread(() -> {
-            try {
-                saveToFile(snapshot);
-                if (onComplete != null) {
-                    onComplete.run();
-                }
-            } catch (IOException ex) {
-                System.err.println("Background save failed: " + ex.getMessage());
             }
         });
         saveThread.start();
