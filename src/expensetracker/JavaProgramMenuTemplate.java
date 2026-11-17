@@ -421,7 +421,7 @@ public class JavaProgramMenuTemplate extends JFrame implements ActionListener {
         } else if (source == aboutItem) {
             JOptionPane.showMessageDialog(
                 this,
-                "Expense Tracker System\nCreated by Group Code Panda (CS0069L)\nHelps students budget and track daily expenses.",
+                "Expense Tracker System\nCreated by Group Code Panda (CS0070L)\nHelps students budget and track daily expenses.",
                 "About",
                 JOptionPane.INFORMATION_MESSAGE
             );
