@@ -8,6 +8,7 @@ import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -24,55 +25,64 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 
+// Main GUI Window for the Expense Tracker System
 public class JavaProgramMenuTemplate extends JFrame implements ActionListener {
-    private final ExpenseTracker tracker = new ExpenseTracker();
-    private List<Expense> displayedExpenses = new ArrayList<>();
 
-    private final JMenuItem newItem = new JMenuItem("New Session");
-    private final JMenuItem openItem = new JMenuItem("Open (Load expenses.txt)");
-    private final JMenuItem saveItem = new JMenuItem("Save (Save expenses.txt)");
-    private final JMenuItem exitItem = new JMenuItem("Exit");
+    // Backend Controller
+    ExpenseTracker tracker;
+    List<Expense> displayedExpenses;
 
-    private final JMenuItem budgetItem = new JMenuItem("Set Monthly Budget");
-    private final JMenuItem addItem = new JMenuItem("Add Expense");
-    private final JMenuItem updateItem = new JMenuItem("Update Selected Expense");
-    private final JMenuItem deleteItem = new JMenuItem("Delete Selected Expense");
+    // Menu Components
+    JMenuBar menuBar;
+    JMenu fileMenu, manageMenu, viewMenu, helpMenu;
+    JMenuItem newItem, openItem, saveItem, exitItem;
+    JMenuItem budgetItem, addItem, updateItem, deleteItem;
+    JMenuItem showAllItem, categoryFilterItem, dateFilterItem, sortItem, breakdownItem, monthlySummaryItem;
+    JMenuItem aboutItem;
 
-    private final JMenuItem showAllItem = new JMenuItem("Show All Expenses");
-    private final JMenuItem categoryFilterItem = new JMenuItem("Filter by Category");
-    private final JMenuItem dateFilterItem = new JMenuItem("Filter by Date");
-    private final JMenuItem sortItem = new JMenuItem("Sort by Amount (Highest First)");
-    private final JMenuItem breakdownItem = new JMenuItem("Category Breakdown");
-    private final JMenuItem monthlySummaryItem = new JMenuItem("Monthly Summary");
-    private final JMenuItem aboutItem = new JMenuItem("About");
+    // Dashboard Labels
+    JLabel budgetLabel, totalLabel, balanceLabel, statusLabel;
 
-    private final JLabel budgetLabel = new JLabel("Monthly Budget: PHP 0.00");
-    private final JLabel totalLabel = new JLabel("Total Expenses: PHP 0.00");
-    private final JLabel balanceLabel = new JLabel("Remaining Balance: PHP 0.00");
-    private final JLabel statusLabel = new JLabel(" Ready.");
+    // Table Components
+    DefaultTableModel tableModel;
+    JTable expenseTable;
 
-    private final DefaultTableModel tableModel;
-    private final JTable expenseTable;
+    // Bottom Buttons
+    JButton budgetButton, addButton, editButton, deleteButton, filterButton;
 
-    private final JButton budgetButton = new JButton("Set Budget");
-    private final JButton addButton = new JButton("Add Expense");
-    private final JButton editButton = new JButton("Edit Selected");
-    private final JButton deleteButton = new JButton("Delete Selected");
-    private final JButton filterButton = new JButton("Filter / Summary");
-
+    // Constructor
     public JavaProgramMenuTemplate() {
         super("Expense Tracker System - Code Panda");
+        tracker = new ExpenseTracker();
+        displayedExpenses = new ArrayList<>();
         setLayout(new BorderLayout(10, 10));
 
-        // Menu Bar Setup
-        JMenuBar menuBar = new JMenuBar();
-        JMenu fileMenu = new JMenu("File");
-        JMenu manageMenu = new JMenu("Manage");
-        JMenu viewMenu = new JMenu("View and Reports");
-        JMenu helpMenu = new JMenu("Help");
+        // Initialize Menu Bar
+        menuBar = new JMenuBar();
+        fileMenu = new JMenu("File");
+        manageMenu = new JMenu("Manage");
+        viewMenu = new JMenu("View and Reports");
+        helpMenu = new JMenu("Help");
+
+        newItem = new JMenuItem("New Session");
+        openItem = new JMenuItem("Open (Load expenses.txt)");
+        saveItem = new JMenuItem("Save (Save expenses.txt)");
+        exitItem = new JMenuItem("Exit");
+
+        budgetItem = new JMenuItem("Set Monthly Budget");
+        addItem = new JMenuItem("Add Expense");
+        updateItem = new JMenuItem("Update Selected Expense");
+        deleteItem = new JMenuItem("Delete Selected Expense");
+
+        showAllItem = new JMenuItem("Show All Expenses");
+        categoryFilterItem = new JMenuItem("Filter by Category");
+        dateFilterItem = new JMenuItem("Filter by Date");
+        sortItem = new JMenuItem("Sort by Amount (Highest First)");
+        breakdownItem = new JMenuItem("Category Breakdown");
+        monthlySummaryItem = new JMenuItem("Monthly Summary");
+        aboutItem = new JMenuItem("About");
 
         fileMenu.add(newItem);
         fileMenu.add(openItem);
@@ -102,15 +112,18 @@ public class JavaProgramMenuTemplate extends JFrame implements ActionListener {
         menuBar.add(helpMenu);
         setJMenuBar(menuBar);
 
-        // Top Dashboard Panel
+        // Initialize Top Dashboard Panel
         JPanel dashboardPanel = new JPanel(new GridLayout(1, 3, 10, 0));
         dashboardPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10));
+        budgetLabel = new JLabel("Monthly Budget: PHP 0.00");
+        totalLabel = new JLabel("Total Expenses: PHP 0.00");
+        balanceLabel = new JLabel("Remaining Balance: PHP 0.00");
         dashboardPanel.add(budgetLabel);
         dashboardPanel.add(totalLabel);
         dashboardPanel.add(balanceLabel);
         add(dashboardPanel, BorderLayout.NORTH);
 
-        // Center Table
+        // Initialize Center Table
         String[] columns = {"#", "Date", "Category", "Amount (PHP)", "Description"};
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
@@ -121,95 +134,118 @@ public class JavaProgramMenuTemplate extends JFrame implements ActionListener {
         expenseTable = new JTable(tableModel);
         add(new JScrollPane(expenseTable), BorderLayout.CENTER);
 
-        // Bottom Controls & Status Bar
+        // Initialize Bottom Buttons and Status Label
         JPanel southPanel = new JPanel(new BorderLayout());
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 5));
+
+        budgetButton = new JButton("Set Budget");
+        addButton = new JButton("Add Expense");
+        editButton = new JButton("Edit Selected");
+        deleteButton = new JButton("Delete Selected");
+        filterButton = new JButton("Filter / Summary");
+
         buttonPanel.add(budgetButton);
         buttonPanel.add(addButton);
         buttonPanel.add(editButton);
         buttonPanel.add(deleteButton);
         buttonPanel.add(filterButton);
 
+        statusLabel = new JLabel(" Ready.");
         southPanel.add(buttonPanel, BorderLayout.CENTER);
         southPanel.add(statusLabel, BorderLayout.SOUTH);
         add(southPanel, BorderLayout.SOUTH);
 
-        // Register Listeners
-        JMenuItem[] items = {
-            newItem, openItem, saveItem, exitItem,
-            budgetItem, addItem, updateItem, deleteItem,
-            showAllItem, categoryFilterItem, dateFilterItem,
-            sortItem, breakdownItem, monthlySummaryItem, aboutItem
-        };
-        for (JMenuItem item : items) {
-            item.addActionListener(this);
-        }
+        // Add Action Listeners
+        newItem.addActionListener(this);
+        openItem.addActionListener(this);
+        saveItem.addActionListener(this);
+        exitItem.addActionListener(this);
+        budgetItem.addActionListener(this);
+        addItem.addActionListener(this);
+        updateItem.addActionListener(this);
+        deleteItem.addActionListener(this);
+        showAllItem.addActionListener(this);
+        categoryFilterItem.addActionListener(this);
+        dateFilterItem.addActionListener(this);
+        sortItem.addActionListener(this);
+        breakdownItem.addActionListener(this);
+        monthlySummaryItem.addActionListener(this);
+        aboutItem.addActionListener(this);
 
-        JButton[] buttons = {budgetButton, addButton, editButton, deleteButton, filterButton};
-        for (JButton button : buttons) {
-            button.addActionListener(this);
-        }
+        budgetButton.addActionListener(this);
+        addButton.addActionListener(this);
+        editButton.addActionListener(this);
+        deleteButton.addActionListener(this);
+        filterButton.addActionListener(this);
 
-        // Load saved budget and expenses on startup
+        // Load existing file on startup
         try {
             ExpenseFileManager.loadFromFile(tracker);
             refreshTable(tracker.getExpenses());
-        } catch (IOException | InvalidExpenseException ex) {
-            statusLabel.setText(" Could not load previous file: " + ex.getMessage());
+        } catch (IOException e1) {
+            statusLabel.setText(" Could not load file: " + e1.getMessage());
+        } catch (InvalidExpenseException e2) {
+            statusLabel.setText(" Invalid data in file: " + e2.getMessage());
         }
     }
 
+    // Refresh the JTable and Dashboard Labels
     private void refreshTable(List<Expense> listToDisplay) {
         displayedExpenses = new ArrayList<>(listToDisplay);
         tableModel.setRowCount(0);
+
         for (int i = 0; i < displayedExpenses.size(); i++) {
-            tableModel.addRow(displayedExpenses.get(i).toTableRow(i + 1));
+            Expense expense = displayedExpenses.get(i);
+            Object[] row = {
+                i + 1,
+                expense.getDate(),
+                expense.getCategory().getDisplayName(),
+                String.format("%.2f", expense.getAmount()),
+                expense.getDescription()
+            };
+            tableModel.addRow(row);
         }
+
         budgetLabel.setText(String.format("Monthly Budget: PHP %.2f", tracker.getMonthlyBudget()));
         totalLabel.setText(String.format("Total Expenses: PHP %.2f", tracker.calculateTotal()));
-        balanceLabel.setText(String.format(
-            "Remaining Balance: PHP %.2f%s",
-            tracker.getRemainingBalance(),
-            tracker.isOverBudget() ? " (OVER BUDGET!)" : ""
-        ));
+        balanceLabel.setText(String.format("Remaining Balance: PHP %.2f", tracker.getRemainingBalance()));
     }
 
-    private void triggerBackgroundSave() {
-        ExpenseFileManager.saveInBackground(
-            tracker,
-            () -> SwingUtilities.invokeLater(() -> statusLabel.setText(" Auto-saved to expenses.txt"))
-        );
-    }
-
+    // Set Monthly Budget Dialog
     private void handleSetBudget() {
-        String input = JOptionPane.showInputDialog(
-            this,
-            "Enter Monthly Budget (PHP):",
-            String.format("%.2f", tracker.getMonthlyBudget())
-        );
+        String input = JOptionPane.showInputDialog(this, "Enter Monthly Budget (PHP):", tracker.getMonthlyBudget());
         if (input == null) {
             return;
         }
         try {
-            tracker.setMonthlyBudget(input);
+            double budget = Double.parseDouble(input.trim());
+            tracker.setMonthlyBudget(budget);
             refreshTable(tracker.getExpenses());
-            triggerBackgroundSave();
-            statusLabel.setText(" Monthly budget updated.");
-        } catch (InvalidExpenseException ex) {
-            JOptionPane.showMessageDialog(this, ex.getMessage(), "Validation Error", JOptionPane.ERROR_MESSAGE);
+            ExpenseFileManager.saveInBackground(tracker);
+            statusLabel.setText(" Monthly budget updated and saved.");
+        } catch (NumberFormatException e1) {
+            JOptionPane.showMessageDialog(this, "Please enter a valid numeric amount.", "Input Error", JOptionPane.ERROR_MESSAGE);
+        } catch (InvalidExpenseException e2) {
+            JOptionPane.showMessageDialog(this, e2.getMessage(), "Validation Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    private void handleAddOrUpdateExpense(Integer editIndex) {
-        Expense existing = (editIndex != null) ? tracker.getExpenses().get(editIndex) : null;
-
-        JTextField amountField = new JTextField(existing != null ? String.valueOf(existing.getAmount()) : "");
+    // Add or Update Expense Dialog
+    private void handleAddOrUpdateExpense(int editIndex) {
+        JTextField amountField = new JTextField();
         JComboBox<ExpenseCategory> categoryBox = new JComboBox<>(ExpenseCategory.values());
-        if (existing != null) {
+        JTextField dateField = new JTextField(LocalDate.now().toString());
+        JTextField descriptionField = new JTextField();
+
+        String title = "Add New Expense";
+        if (editIndex >= 0) {
+            Expense existing = tracker.getExpenses().get(editIndex);
+            amountField.setText(String.valueOf(existing.getAmount()));
             categoryBox.setSelectedItem(existing.getCategory());
+            dateField.setText(existing.getDate().toString());
+            descriptionField.setText(existing.getDescription());
+            title = "Update Expense #" + (editIndex + 1);
         }
-        JTextField dateField = new JTextField(existing != null ? existing.getDate().toString() : LocalDate.now().toString());
-        JTextField descriptionField = new JTextField(existing != null ? existing.getDescription() : "");
 
         JPanel form = new JPanel(new GridLayout(4, 2, 5, 5));
         form.add(new JLabel("Amount (PHP):"));
@@ -221,33 +257,44 @@ public class JavaProgramMenuTemplate extends JFrame implements ActionListener {
         form.add(new JLabel("Description (Optional):"));
         form.add(descriptionField);
 
-        String title = (editIndex == null) ? "Add New Expense" : "Update Expense #" + (editIndex + 1);
         int result = JOptionPane.showConfirmDialog(this, form, title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-
         if (result == JOptionPane.OK_OPTION) {
             try {
+                double amount = Double.parseDouble(amountField.getText().trim());
+                LocalDate date = LocalDate.parse(dateField.getText().trim());
                 ExpenseCategory category = (ExpenseCategory) categoryBox.getSelectedItem();
-                if (editIndex == null) {
-                    tracker.addExpense(amountField.getText(), dateField.getText(), descriptionField.getText(), category);
+                String description = descriptionField.getText();
+
+                Expense expense = new Expense(amount, date, description, category);
+                if (editIndex < 0) {
+                    tracker.addExpense(expense);
                 } else {
-                    tracker.updateExpense(editIndex, amountField.getText(), dateField.getText(), descriptionField.getText(), category);
+                    tracker.updateExpense(editIndex, expense);
                 }
                 refreshTable(tracker.getExpenses());
-                triggerBackgroundSave();
-            } catch (InvalidExpenseException ex) {
-                JOptionPane.showMessageDialog(this, ex.getMessage(), "Validation Error", JOptionPane.ERROR_MESSAGE);
+                ExpenseFileManager.saveInBackground(tracker);
+                statusLabel.setText(" Auto-saved to expenses.txt");
+            } catch (NumberFormatException e1) {
+                JOptionPane.showMessageDialog(this, "Amount must be a valid number.", "Input Error", JOptionPane.ERROR_MESSAGE);
+            } catch (DateTimeParseException e2) {
+                JOptionPane.showMessageDialog(this, "Invalid date format. Use YYYY-MM-DD.", "Date Error", JOptionPane.ERROR_MESSAGE);
+            } catch (InvalidExpenseException e3) {
+                JOptionPane.showMessageDialog(this, e3.getMessage(), "Validation Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
 
+    // Find actual index in tracker from selected table row
     private int getSelectedTrackerIndex() {
         int selectedRow = expenseTable.getSelectedRow();
         if (selectedRow < 0 || selectedRow >= displayedExpenses.size()) {
             return -1;
         }
-        return tracker.getExpenses().indexOf(displayedExpenses.get(selectedRow));
+        Expense selectedExpense = displayedExpenses.get(selectedRow);
+        return tracker.getExpenses().indexOf(selectedExpense);
     }
 
+    // Delete Selected Expense
     private void handleDeleteExpense() {
         int trackerIndex = getSelectedTrackerIndex();
         if (trackerIndex < 0) {
@@ -258,10 +305,12 @@ public class JavaProgramMenuTemplate extends JFrame implements ActionListener {
         if (confirm == JOptionPane.YES_OPTION) {
             tracker.deleteExpense(trackerIndex);
             refreshTable(tracker.getExpenses());
-            triggerBackgroundSave();
+            ExpenseFileManager.saveInBackground(tracker);
+            statusLabel.setText(" Expense deleted and saved.");
         }
     }
 
+    // View and Filter Helper Methods
     private void showAllExpenses() {
         refreshTable(tracker.getExpenses());
         statusLabel.setText(" Showing all expenses.");
@@ -269,14 +318,9 @@ public class JavaProgramMenuTemplate extends JFrame implements ActionListener {
 
     private void filterByCategory() {
         ExpenseCategory selectedCategory = (ExpenseCategory) JOptionPane.showInputDialog(
-            this,
-            "Select Category:",
-            "Filter by Category",
-            JOptionPane.QUESTION_MESSAGE,
-            null,
-            ExpenseCategory.values(),
-            ExpenseCategory.FOOD
-        );
+                this, "Select Category:", "Filter by Category",
+                JOptionPane.QUESTION_MESSAGE, null,
+                ExpenseCategory.values(), ExpenseCategory.FOOD);
         if (selectedCategory != null) {
             refreshTable(tracker.filterByCategory(selectedCategory));
             statusLabel.setText(" Filtered by category: " + selectedCategory.getDisplayName());
@@ -289,11 +333,11 @@ public class JavaProgramMenuTemplate extends JFrame implements ActionListener {
             return;
         }
         try {
-            LocalDate date = ExpenseTracker.parseDateInput(input);
+            LocalDate date = LocalDate.parse(input.trim());
             refreshTable(tracker.filterByDate(date));
             statusLabel.setText(" Filtered by date: " + date);
-        } catch (InvalidExpenseException ex) {
-            JOptionPane.showMessageDialog(this, ex.getMessage(), "Date Error", JOptionPane.ERROR_MESSAGE);
+        } catch (DateTimeParseException e1) {
+            JOptionPane.showMessageDialog(this, "Invalid date format. Use YYYY-MM-DD.", "Date Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -304,12 +348,12 @@ public class JavaProgramMenuTemplate extends JFrame implements ActionListener {
 
     private void showCategoryBreakdown() {
         Map<ExpenseCategory, Double> breakdown = tracker.getBreakdown();
-        StringBuilder message = new StringBuilder("Spending Breakdown by Category:\n\n");
+        String message = "Spending Breakdown by Category:\n\n";
         for (ExpenseCategory category : ExpenseCategory.values()) {
-            message.append(String.format("%-18s: PHP %.2f\n", category.getDisplayName(), breakdown.getOrDefault(category, 0.0)));
+            message += String.format("%-18s: PHP %.2f\n", category.getDisplayName(), breakdown.get(category));
         }
-        message.append(String.format("\nTotal Spent: PHP %.2f", tracker.calculateTotal()));
-        JOptionPane.showMessageDialog(this, message.toString(), "Category Breakdown", JOptionPane.INFORMATION_MESSAGE);
+        message += String.format("\nTotal Spent: PHP %.2f", tracker.calculateTotal());
+        JOptionPane.showMessageDialog(this, message, "Category Breakdown", JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void showMonthlySummary() {
@@ -318,38 +362,18 @@ public class JavaProgramMenuTemplate extends JFrame implements ActionListener {
             return;
         }
         try {
-            YearMonth month = ExpenseTracker.parseMonthInput(input);
+            YearMonth month = YearMonth.parse(input.trim());
             double total = tracker.getMonthlySummary(month);
-            JOptionPane.showMessageDialog(
-                this,
-                String.format("Total expenses for %s: PHP %.2f", month, total),
-                "Monthly Summary",
-                JOptionPane.INFORMATION_MESSAGE
-            );
-        } catch (InvalidExpenseException ex) {
-            JOptionPane.showMessageDialog(this, ex.getMessage(), "Month Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, String.format("Total expenses for %s: PHP %.2f", month, total), "Monthly Summary", JOptionPane.INFORMATION_MESSAGE);
+        } catch (DateTimeParseException e1) {
+            JOptionPane.showMessageDialog(this, "Invalid month format. Use YYYY-MM.", "Month Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
     private void handleViewFilter() {
-        String[] options = {
-            "Show All",
-            "Filter by Category",
-            "Filter by Date",
-            "Sort Highest to Lowest",
-            "Category Breakdown",
-            "Monthly Summary"
-        };
-        int choice = JOptionPane.showOptionDialog(
-            this,
-            "Choose a view or summary option:",
-            "View & Filter Expenses",
-            JOptionPane.DEFAULT_OPTION,
-            JOptionPane.QUESTION_MESSAGE,
-            null,
-            options,
-            options[0]
-        );
+        String[] options = {"Show All", "Filter by Category", "Filter by Date", "Sort Highest to Lowest", "Category Breakdown", "Monthly Summary"};
+        int choice = JOptionPane.showOptionDialog(this, "Choose a view or summary option:", "View & Filter Expenses",
+                JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
         if (choice == 0) {
             showAllExpenses();
         } else if (choice == 1) {
@@ -365,15 +389,16 @@ public class JavaProgramMenuTemplate extends JFrame implements ActionListener {
         }
     }
 
+    // Event Handler (ActionListener)
     @Override
     public void actionPerformed(ActionEvent event) {
         Object source = event.getSource();
+
         if (source == newItem) {
             int confirm = JOptionPane.showConfirmDialog(this, "Clear all current expenses in memory?", "New Session", JOptionPane.YES_NO_OPTION);
             if (confirm == JOptionPane.YES_OPTION) {
                 tracker.getExpenses().clear();
                 refreshTable(tracker.getExpenses());
-                triggerBackgroundSave();
                 statusLabel.setText(" Cleared session.");
             }
         } else if (source == openItem) {
@@ -381,20 +406,22 @@ public class JavaProgramMenuTemplate extends JFrame implements ActionListener {
                 ExpenseFileManager.loadFromFile(tracker);
                 refreshTable(tracker.getExpenses());
                 JOptionPane.showMessageDialog(this, "Expenses loaded from expenses.txt.", "Loaded", JOptionPane.INFORMATION_MESSAGE);
-            } catch (IOException | InvalidExpenseException ex) {
-                JOptionPane.showMessageDialog(this, "Load error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            } catch (IOException e1) {
+                JOptionPane.showMessageDialog(this, "Load error: " + e1.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            } catch (InvalidExpenseException e2) {
+                JOptionPane.showMessageDialog(this, "Validation error: " + e2.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         } else if (source == saveItem) {
             try {
                 ExpenseFileManager.saveToFile(tracker);
                 JOptionPane.showMessageDialog(this, "Expenses saved to expenses.txt.", "Saved", JOptionPane.INFORMATION_MESSAGE);
-            } catch (IOException ex) {
-                JOptionPane.showMessageDialog(this, "Save error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            } catch (IOException e1) {
+                JOptionPane.showMessageDialog(this, "Save error: " + e1.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         } else if (source == budgetItem || source == budgetButton) {
             handleSetBudget();
         } else if (source == addItem || source == addButton) {
-            handleAddOrUpdateExpense(null);
+            handleAddOrUpdateExpense(-1);
         } else if (source == updateItem || source == editButton) {
             int trackerIndex = getSelectedTrackerIndex();
             if (trackerIndex < 0) {
@@ -419,25 +446,20 @@ public class JavaProgramMenuTemplate extends JFrame implements ActionListener {
         } else if (source == monthlySummaryItem) {
             showMonthlySummary();
         } else if (source == aboutItem) {
-            JOptionPane.showMessageDialog(
-                this,
-                "Expense Tracker System\nCreated by Group Code Panda (CS0070L)\nHelps students budget and track daily expenses.",
-                "About",
-                JOptionPane.INFORMATION_MESSAGE
-            );
+            JOptionPane.showMessageDialog(this,
+                    "Expense Tracker System\nCreated by Group Code Panda (CS0070L)\nHelps students budget and track daily expenses.",
+                    "About", JOptionPane.INFORMATION_MESSAGE);
         } else if (source == exitItem) {
             System.exit(0);
         }
     }
 
+    // Main Method
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            JavaProgramMenuTemplate gui = new JavaProgramMenuTemplate();
-            gui.setSize(700, 450);
-            gui.setLocationRelativeTo(null);
-            gui.setResizable(true);
-            gui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            gui.setVisible(true);
-        });
+        JavaProgramMenuTemplate gui = new JavaProgramMenuTemplate();
+        gui.setSize(700, 450);
+        gui.setLocationRelativeTo(null);
+        gui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        gui.setVisible(true);
     }
 }
