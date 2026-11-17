@@ -2,24 +2,27 @@ package expensetracker;
 
 import java.time.LocalDate;
 
+// Abstract parent class representing a general financial transaction (Module 3 & 4)
 public abstract class Transaction {
     private double amount;
     private LocalDate date;
     private String description;
 
+    // Constructor
     public Transaction(double amount, LocalDate date, String description) throws InvalidExpenseException {
         setAmount(amount);
         setDate(date);
         setDescription(description);
     }
 
+    // Getters and Setters
     public double getAmount() {
         return amount;
     }
 
     public void setAmount(double amount) throws InvalidExpenseException {
-        if (Double.isNaN(amount) || Double.isInfinite(amount) || amount <= 0) {
-            throw new InvalidExpenseException("Amount must be a valid number greater than 0.");
+        if (amount <= 0) {
+            throw new InvalidExpenseException("Amount must be greater than 0.");
         }
         this.amount = amount;
     }
@@ -43,8 +46,13 @@ public abstract class Transaction {
     }
 
     public void setDescription(String description) {
-        this.description = (description == null) ? "" : description.trim().replace("|", "/");
+        if (description == null) {
+            this.description = "";
+        } else {
+            this.description = description.trim();
+        }
     }
 
+    // Abstract method to be overridden by child classes
     public abstract String getSummary();
 }
