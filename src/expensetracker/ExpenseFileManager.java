@@ -11,7 +11,7 @@ import java.time.LocalDate;
 // Handles Database Persistence using Apache Derby JDBC and Multithreading (Module 7 & 8)
 public class ExpenseFileManager {
 
-    // JDBC Variables (Matches Professor's Pokedex.java & Login.java)
+    // JDBC Variables (Matches Pokedex.java & StudentDatabaseApp.java)
     static Connection conn;
     static Statement st;
     static PreparedStatement pst;
