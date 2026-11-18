@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-// Controller class managing the list of expenses and budget calculations (Module 2, 4, 6 & 7)
+// Controller class 
 public class ExpenseTracker {
     private List<Expense> expenses;
     private double monthlyBudget;
@@ -93,7 +93,7 @@ public class ExpenseTracker {
         return monthlyTotal;
     }
 
-    // Filter expenses by category (Module 6: ArrayList)
+    // Filter expenses by category 
     public synchronized List<Expense> filterByCategory(ExpenseCategory category) {
         List<Expense> filtered = new ArrayList<>();
         for (Expense expense : expenses) {
@@ -104,7 +104,7 @@ public class ExpenseTracker {
         return filtered;
     }
 
-    // Filter expenses by date (Module 6: ArrayList)
+    // Filter expenses by date
     public synchronized List<Expense> filterByDate(LocalDate date) {
         List<Expense> filtered = new ArrayList<>();
         for (Expense expense : expenses) {
@@ -115,7 +115,7 @@ public class ExpenseTracker {
         return filtered;
     }
 
-    // Get unique dates with recorded expenses (Module 6: HashSet)
+    // Get unique dates with recorded expenses
     public synchronized Set<LocalDate> getUniqueDates() {
         Set<LocalDate> dates = new HashSet<>();
         for (Expense expense : expenses) {
@@ -124,7 +124,7 @@ public class ExpenseTracker {
         return dates;
     }
 
-    // Breakdown total spending per category (Module 6: HashMap)
+    // Breakdown total spending per category
     public synchronized Map<ExpenseCategory, Double> getBreakdown() {
         Map<ExpenseCategory, Double> breakdown = new HashMap<>();
         for (ExpenseCategory cat : ExpenseCategory.values()) {
