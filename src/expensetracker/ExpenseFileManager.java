@@ -91,7 +91,7 @@ public class ExpenseFileManager {
     }
 
     // Load budget and expenses from the Apache Derby Database (Module 8 CRUD: SELECT)
-    public static synchronized void loadFromFile(ExpenseTracker tracker) throws InvalidExpenseException {
+    public static synchronized void loadFromFile(ExpenseTracker tracker) {
         connectDB();
         if (conn == null) {
             return;
@@ -119,6 +119,10 @@ public class ExpenseFileManager {
             }
         } catch (SQLException e1) {
             System.out.println("Database load error: " + e1.getMessage());
+        } catch (InvalidExpenseException e2) {
+            System.out.println("Invalid data in database: " + e2.getMessage());
+        } catch (Exception e3) {
+            System.out.println("Error parsing database record: " + e3.getMessage());
         }
     }
 
