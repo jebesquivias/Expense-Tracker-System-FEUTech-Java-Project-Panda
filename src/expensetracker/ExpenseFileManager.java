@@ -11,7 +11,7 @@ import java.time.LocalDate;
 // Database Persistence mod 7+8
 public class ExpenseFileManager {
 
-    // JDBC Variables (Matches Pokedex.java & StudentDatabaseApp.java)
+    // JDBC Variables
     static Connection conn;
     static Statement st;
     static PreparedStatement pst;
@@ -20,7 +20,7 @@ public class ExpenseFileManager {
     final static String USERNAME = "java";
     final static String PASSWORD = "java";
 
-    // Connect to Apache Derby Database
+    // Connect to database
     public static void connectDB() {
         try {
             if (conn == null || conn.isClosed()) {
