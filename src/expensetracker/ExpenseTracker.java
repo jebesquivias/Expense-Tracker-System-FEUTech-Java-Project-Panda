@@ -1,11 +1,12 @@
 package expensetracker;
 
 import java.time.LocalDate;
-import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 // Controller class managing the list of expenses and budget calculations (Module 2 & 6)
 public class ExpenseTracker {
@@ -69,18 +70,18 @@ public class ExpenseTracker {
         return monthlyBudget - calculateTotal();
     }
 
-    // Calculate total spending for a specific month
-    public synchronized double getMonthlySummary(YearMonth month) {
+    // Calculate total spending for a specific month (e.g. "2026-11")
+    public synchronized double getMonthlySummary(String yearMonthPrefix) {
         double monthlyTotal = 0;
         for (Expense expense : expenses) {
-            if (YearMonth.from(expense.getDate()).equals(month)) {
+            if (expense.getDate().toString().startsWith(yearMonthPrefix)) {
                 monthlyTotal += expense.getAmount();
             }
         }
         return monthlyTotal;
     }
 
-    // Filter expenses by category
+    // Filter expenses by category (Module 6: ArrayList)
     public synchronized List<Expense> filterByCategory(ExpenseCategory category) {
         List<Expense> filtered = new ArrayList<>();
         for (Expense expense : expenses) {
@@ -91,7 +92,7 @@ public class ExpenseTracker {
         return filtered;
     }
 
-    // Filter expenses by date
+    // Filter expenses by date (Module 6: ArrayList)
     public synchronized List<Expense> filterByDate(LocalDate date) {
         List<Expense> filtered = new ArrayList<>();
         for (Expense expense : expenses) {
@@ -102,7 +103,16 @@ public class ExpenseTracker {
         return filtered;
     }
 
-    // Breakdown total spending per category using HashMap
+    // Get unique dates with recorded expenses (Module 6: HashSet)
+    public synchronized Set<LocalDate> getUniqueDates() {
+        Set<LocalDate> dates = new HashSet<>();
+        for (Expense expense : expenses) {
+            dates.add(expense.getDate());
+        }
+        return dates;
+    }
+
+    // Breakdown total spending per category (Module 6: HashMap)
     public synchronized Map<ExpenseCategory, Double> getBreakdown() {
         Map<ExpenseCategory, Double> breakdown = new HashMap<>();
         for (ExpenseCategory cat : ExpenseCategory.values()) {
