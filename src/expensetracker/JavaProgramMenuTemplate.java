@@ -34,12 +34,10 @@ public class JavaProgramMenuTemplate extends JFrame implements ActionListener {
     ExpenseTracker tracker;
     List<Expense> displayedExpenses;
 
-    // Menu Components
+    // Menu Components (Only File and Help)
     JMenuBar menuBar;
-    JMenu fileMenu, manageMenu, viewMenu, helpMenu;
+    JMenu fileMenu, helpMenu;
     JMenuItem newItem, openItem, saveItem, exitItem;
-    JMenuItem budgetItem, addItem, updateItem, deleteItem;
-    JMenuItem showAllItem, categoryFilterItem, dateFilterItem, sortItem, breakdownItem, monthlySummaryItem;
     JMenuItem aboutItem;
 
     // Dashboard Labels
@@ -62,26 +60,12 @@ public class JavaProgramMenuTemplate extends JFrame implements ActionListener {
         // Initialize Menu Bar
         menuBar = new JMenuBar();
         fileMenu = new JMenu("File");
-        manageMenu = new JMenu("Manage");
-        viewMenu = new JMenu("View and Reports");
         helpMenu = new JMenu("Help");
 
         newItem = new JMenuItem("New Session");
         openItem = new JMenuItem("Open (Load expenses.txt)");
         saveItem = new JMenuItem("Save (Save expenses.txt)");
         exitItem = new JMenuItem("Exit");
-
-        budgetItem = new JMenuItem("Set Monthly Budget");
-        addItem = new JMenuItem("Add Expense");
-        updateItem = new JMenuItem("Update Selected Expense");
-        deleteItem = new JMenuItem("Delete Selected Expense");
-
-        showAllItem = new JMenuItem("Show All Expenses");
-        categoryFilterItem = new JMenuItem("Filter by Category");
-        dateFilterItem = new JMenuItem("Filter by Date");
-        sortItem = new JMenuItem("Sort by Amount (Highest First)");
-        breakdownItem = new JMenuItem("Category Breakdown");
-        monthlySummaryItem = new JMenuItem("Monthly Summary");
         aboutItem = new JMenuItem("About");
 
         fileMenu.add(newItem);
@@ -90,25 +74,9 @@ public class JavaProgramMenuTemplate extends JFrame implements ActionListener {
         fileMenu.addSeparator();
         fileMenu.add(exitItem);
 
-        manageMenu.add(budgetItem);
-        manageMenu.addSeparator();
-        manageMenu.add(addItem);
-        manageMenu.add(updateItem);
-        manageMenu.add(deleteItem);
-
-        viewMenu.add(showAllItem);
-        viewMenu.add(categoryFilterItem);
-        viewMenu.add(dateFilterItem);
-        viewMenu.add(sortItem);
-        viewMenu.addSeparator();
-        viewMenu.add(breakdownItem);
-        viewMenu.add(monthlySummaryItem);
-
         helpMenu.add(aboutItem);
 
         menuBar.add(fileMenu);
-        menuBar.add(manageMenu);
-        menuBar.add(viewMenu);
         menuBar.add(helpMenu);
         setJMenuBar(menuBar);
 
@@ -155,30 +123,21 @@ public class JavaProgramMenuTemplate extends JFrame implements ActionListener {
         southPanel.add(statusLabel, BorderLayout.SOUTH);
         add(southPanel, BorderLayout.SOUTH);
 
-        // Add Action Listeners
+        // Add Action Listeners for Menu Items
         newItem.addActionListener(this);
         openItem.addActionListener(this);
         saveItem.addActionListener(this);
         exitItem.addActionListener(this);
-        budgetItem.addActionListener(this);
-        addItem.addActionListener(this);
-        updateItem.addActionListener(this);
-        deleteItem.addActionListener(this);
-        showAllItem.addActionListener(this);
-        categoryFilterItem.addActionListener(this);
-        dateFilterItem.addActionListener(this);
-        sortItem.addActionListener(this);
-        breakdownItem.addActionListener(this);
-        monthlySummaryItem.addActionListener(this);
         aboutItem.addActionListener(this);
 
+        // Add Action Listeners for Bottom Buttons
         budgetButton.addActionListener(this);
         addButton.addActionListener(this);
         editButton.addActionListener(this);
         deleteButton.addActionListener(this);
         filterButton.addActionListener(this);
 
-        // Load existing file on startup
+        // Load existing file and database records on startup
         try {
             ExpenseFileManager.loadFromFile(tracker);
             refreshTable(tracker.getExpenses());
@@ -310,7 +269,7 @@ public class JavaProgramMenuTemplate extends JFrame implements ActionListener {
         }
     }
 
-    // View and Filter Helper Methods
+    // View and Filter Helper Methods (Triggered via Filter / Summary Button)
     private void showAllExpenses() {
         refreshTable(tracker.getExpenses());
         statusLabel.setText(" Showing all expenses.");
@@ -418,33 +377,21 @@ public class JavaProgramMenuTemplate extends JFrame implements ActionListener {
             } catch (IOException e1) {
                 JOptionPane.showMessageDialog(this, "Save error: " + e1.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
-        } else if (source == budgetItem || source == budgetButton) {
+        } else if (source == budgetButton) {
             handleSetBudget();
-        } else if (source == addItem || source == addButton) {
+        } else if (source == addButton) {
             handleAddOrUpdateExpense(-1);
-        } else if (source == updateItem || source == editButton) {
+        } else if (source == editButton) {
             int trackerIndex = getSelectedTrackerIndex();
             if (trackerIndex < 0) {
                 JOptionPane.showMessageDialog(this, "Please select an expense row in the table to edit.", "No Selection", JOptionPane.WARNING_MESSAGE);
             } else {
                 handleAddOrUpdateExpense(trackerIndex);
             }
-        } else if (source == deleteItem || source == deleteButton) {
+        } else if (source == deleteButton) {
             handleDeleteExpense();
         } else if (source == filterButton) {
             handleViewFilter();
-        } else if (source == showAllItem) {
-            showAllExpenses();
-        } else if (source == categoryFilterItem) {
-            filterByCategory();
-        } else if (source == dateFilterItem) {
-            filterByDate();
-        } else if (source == sortItem) {
-            sortByAmount();
-        } else if (source == breakdownItem) {
-            showCategoryBreakdown();
-        } else if (source == monthlySummaryItem) {
-            showMonthlySummary();
         } else if (source == aboutItem) {
             JOptionPane.showMessageDialog(this,
                     "Expense Tracker System\nCreated by Group Code Panda (CS0070L)\nHelps students budget and track daily expenses.",
