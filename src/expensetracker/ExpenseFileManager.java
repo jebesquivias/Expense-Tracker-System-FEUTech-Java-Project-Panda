@@ -8,7 +8,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDate;
 
-// Handles Data Persistence using Apache Derby JDBC and Multithreading (Module 7 & 8)
+// Handles Database Persistence using Apache Derby JDBC and Multithreading (Module 7 & 8)
 public class ExpenseFileManager {
 
     // JDBC Variables (Matches Professor's Pokedex.java & Login.java)
@@ -34,7 +34,27 @@ public class ExpenseFileManager {
         }
     }
 
-    // Save all expenses to the Apache Derby Database Table (Module 8: JDBC)
+    // Update a single expense row in the database (Module 8 CRUD: UPDATE)
+    public static synchronized void updateExpenseInDB(int eid, Expense expense) {
+        connectDB();
+        if (conn == null) {
+            return;
+        }
+        try {
+            String sql = "UPDATE expenses SET edate = ?, ecategory = ?, eamount = ?, edescription = ? WHERE eid = ?";
+            pst = conn.prepareStatement(sql);
+            pst.setString(1, expense.getDate().toString());
+            pst.setString(2, expense.getCategory().name());
+            pst.setDouble(3, expense.getAmount());
+            pst.setString(4, expense.getDescription());
+            pst.setInt(5, eid);
+            pst.executeUpdate();
+        } catch (SQLException e1) {
+            System.out.println("Database update error: " + e1.getMessage());
+        }
+    }
+
+    // Save budget and all expenses to the Apache Derby Database (Module 8 CRUD: DELETE & INSERT)
     public static synchronized void saveToFile(ExpenseTracker tracker) {
         connectDB();
         if (conn == null) {
@@ -47,6 +67,15 @@ public class ExpenseFileManager {
             String sql = "INSERT INTO expenses VALUES (?, ?, ?, ?, ?)";
             pst = conn.prepareStatement(sql);
 
+            // Row 0 stores the Monthly Budget in the database
+            pst.setInt(1, 0);
+            pst.setString(2, LocalDate.now().toString());
+            pst.setString(3, "BUDGET");
+            pst.setDouble(4, tracker.getMonthlyBudget());
+            pst.setString(5, "Monthly Budget");
+            pst.executeUpdate();
+
+            // Rows 1..N store the Expense records
             for (int i = 0; i < tracker.getExpenses().size(); i++) {
                 Expense expense = tracker.getExpenses().get(i);
                 pst.setInt(1, i + 1);
@@ -61,7 +90,7 @@ public class ExpenseFileManager {
         }
     }
 
-    // Load expenses from the Apache Derby Database Table (Module 8: JDBC)
+    // Load budget and expenses from the Apache Derby Database (Module 8 CRUD: SELECT)
     public static synchronized void loadFromFile(ExpenseTracker tracker) throws InvalidExpenseException {
         connectDB();
         if (conn == null) {
@@ -75,11 +104,18 @@ public class ExpenseFileManager {
             tracker.getExpenses().clear();
             while (rs.next()) {
                 int eid = rs.getInt(1);
-                LocalDate date = LocalDate.parse(rs.getString(2));
-                ExpenseCategory category = ExpenseCategory.valueOf(rs.getString(3));
+                String dateText = rs.getString(2);
+                String catText = rs.getString(3);
                 double amount = rs.getDouble(4);
                 String description = rs.getString(5);
-                tracker.addExpense(new Expense(amount, date, description, category));
+
+                if (eid == 0 || "BUDGET".equals(catText)) {
+                    tracker.setMonthlyBudget(amount);
+                } else {
+                    LocalDate date = LocalDate.parse(dateText);
+                    ExpenseCategory category = ExpenseCategory.valueOf(catText);
+                    tracker.addExpense(new Expense(amount, date, description, category));
+                }
             }
         } catch (SQLException e1) {
             System.out.println("Database load error: " + e1.getMessage());
