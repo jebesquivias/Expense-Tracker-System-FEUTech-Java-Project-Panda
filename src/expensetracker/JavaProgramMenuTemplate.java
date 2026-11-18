@@ -177,6 +177,7 @@ public class JavaProgramMenuTemplate extends JFrame implements ActionListener {
             double budget = Double.parseDouble(input.trim());
             tracker.setMonthlyBudget(budget);
             refreshTable(tracker.getExpenses());
+            ExpenseFileManager.saveInBackground(tracker);
             statusLabel.setText(" Monthly budget updated.");
         } catch (NumberFormatException e1) {
             JOptionPane.showMessageDialog(this, "Please enter a valid numeric amount.", "Input Error", JOptionPane.ERROR_MESSAGE);
