@@ -2,7 +2,7 @@ package expensetracker;
 
 import java.time.LocalDate;
 
-// Abstract parent class representing a general financial transaction (Module 3 & 4)
+// Abstract parent class
 public abstract class Transaction {
     private double amount;
     private LocalDate date;
