@@ -8,7 +8,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDate;
 
-// Handles Database Persistence using Apache Derby JDBC and Multithreading (Module 7 & 8)
+// Database Persistence mod 7+8
 public class ExpenseFileManager {
 
     // JDBC Variables (Matches Pokedex.java & StudentDatabaseApp.java)
@@ -34,7 +34,7 @@ public class ExpenseFileManager {
         }
     }
 
-    // Update a single expense row in the database (Module 8 CRUD: UPDATE)
+    // Update a single exp row
     public static synchronized void updateExpenseInDB(int eid, Expense expense) {
         connectDB();
         if (conn == null) {
@@ -54,7 +54,7 @@ public class ExpenseFileManager {
         }
     }
 
-    // Save budget and all expenses to the Apache Derby Database (Module 8 CRUD: DELETE & INSERT)
+    // Save budget and all expenses to database
     public static synchronized void saveToFile(ExpenseTracker tracker) {
         connectDB();
         if (conn == null) {
@@ -67,7 +67,7 @@ public class ExpenseFileManager {
             String sql = "INSERT INTO expenses VALUES (?, ?, ?, ?, ?)";
             pst = conn.prepareStatement(sql);
 
-            // Row 0 stores the Monthly Budget in the database
+            // Row 0 budget
             pst.setInt(1, 0);
             pst.setString(2, LocalDate.now().toString());
             pst.setString(3, "BUDGET");
@@ -75,7 +75,7 @@ public class ExpenseFileManager {
             pst.setString(5, "Monthly Budget");
             pst.executeUpdate();
 
-            // Rows 1..N store the Expense records
+            // Rows 1..x records
             for (int i = 0; i < tracker.getExpenses().size(); i++) {
                 Expense expense = tracker.getExpenses().get(i);
                 pst.setInt(1, i + 1);
@@ -90,7 +90,7 @@ public class ExpenseFileManager {
         }
     }
 
-    // Load budget and expenses from the Apache Derby Database (Module 8 CRUD: SELECT)
+    // Load budget and expenses from dtabase
     public static synchronized void loadFromFile(ExpenseTracker tracker) {
         connectDB();
         if (conn == null) {
@@ -126,7 +126,7 @@ public class ExpenseFileManager {
         }
     }
 
-    // Save to database using a separate background thread (Module 7: Multithreading)
+    // Save to database mod 7
     public static void saveInBackground(final ExpenseTracker tracker) {
         Thread saveThread = new Thread(new Runnable() {
             @Override
