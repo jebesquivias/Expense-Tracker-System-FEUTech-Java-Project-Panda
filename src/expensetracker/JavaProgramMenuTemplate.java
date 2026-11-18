@@ -127,12 +127,8 @@ public class JavaProgramMenuTemplate extends JFrame implements ActionListener {
         filterButton.addActionListener(this);
 
         // Load existing database records on startup
-        try {
-            ExpenseFileManager.loadFromFile(tracker);
-            refreshTable(tracker.getExpenses());
-        } catch (InvalidExpenseException e1) {
-            statusLabel.setText(" Invalid data in database: " + e1.getMessage());
-        }
+        ExpenseFileManager.loadFromFile(tracker);
+        refreshTable(tracker.getExpenses());
     }
 
     // Refresh the JTable and Dashboard Labels
@@ -321,4 +317,71 @@ public class JavaProgramMenuTemplate extends JFrame implements ActionListener {
     private void handleViewFilter() {
         String[] options = {"Show All", "Filter by Category", "Filter by Date", "Sort Highest to Lowest", "Category Breakdown", "Monthly Summary"};
         int choice = JOptionPane.showOptionDialog(this, "Choose a view or summary option:", "View & Filter Expenses",
-                JOptionPane.DEFAULT_OPTION, JOption
+                JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+        if (choice == 0) {
+            showAllExpenses();
+        } else if (choice == 1) {
+            filterByCategory();
+        } else if (choice == 2) {
+            filterByDate();
+        } else if (choice == 3) {
+            sortByAmount();
+        } else if (choice == 4) {
+            showCategoryBreakdown();
+        } else if (choice == 5) {
+            showMonthlySummary();
+        }
+    }
+
+    // Event Handler (ActionListener)
+    @Override
+    public void actionPerformed(ActionEvent event) {
+        Object source = event.getSource();
+
+        if (source == newItem) {
+            int confirm = JOptionPane.showConfirmDialog(this, "Clear all current expenses in memory?", "New Session", JOptionPane.YES_NO_OPTION);
+            if (confirm == JOptionPane.YES_OPTION) {
+                tracker.getExpenses().clear();
+                refreshTable(tracker.getExpenses());
+                statusLabel.setText(" Cleared session.");
+            }
+        } else if (source == openItem) {
+            ExpenseFileManager.loadFromFile(tracker);
+            refreshTable(tracker.getExpenses());
+            JOptionPane.showMessageDialog(this, "Expenses loaded from database.", "Loaded", JOptionPane.INFORMATION_MESSAGE);
+        } else if (source == saveItem) {
+            ExpenseFileManager.saveToFile(tracker);
+            JOptionPane.showMessageDialog(this, "Expenses saved to database.", "Saved", JOptionPane.INFORMATION_MESSAGE);
+        } else if (source == budgetButton) {
+            handleSetBudget();
+        } else if (source == addButton) {
+            handleAddOrUpdateExpense(-1);
+        } else if (source == editButton) {
+            int trackerIndex = getSelectedTrackerIndex();
+            if (trackerIndex < 0) {
+                JOptionPane.showMessageDialog(this, "Please select an expense row in the table to edit.", "No Selection", JOptionPane.WARNING_MESSAGE);
+            } else {
+                handleAddOrUpdateExpense(trackerIndex);
+            }
+        } else if (source == deleteButton) {
+            handleDeleteExpense();
+        } else if (source == filterButton) {
+            handleViewFilter();
+        } else if (source == aboutItem) {
+            JOptionPane.showMessageDialog(this,
+                    "Expense Tracker System\nCreated by Group Code Panda (CS0070L)\nHelps students budget and track daily expenses.",
+                    "About", JOptionPane.INFORMATION_MESSAGE);
+        } else if (source == exitItem) {
+            System.exit(0);
+        }
+    }
+
+    // Main Method
+    public static void main(String[] args) {
+        JavaProgramMenuTemplate gui = new JavaProgramMenuTemplate();
+        gui.setSize(700, 450);
+        gui.setLocationRelativeTo(null);
+        gui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        gui.setVisible(true);
+    }
+}
