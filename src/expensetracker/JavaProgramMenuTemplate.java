@@ -24,37 +24,37 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
 
-// Main GUI Window for the Expense Tracker System (Module 7 & 8)
+//Main GUI Window for the ETS
 public class JavaProgramMenuTemplate extends JFrame implements ActionListener {
 
-    // Backend Controller
+    //Backend controller
     ExpenseTracker tracker;
     List<Expense> displayedExpenses;
 
-    // Menu Components (Only File and Help)
+    //Menu components
     JMenuBar menuBar;
     JMenu fileMenu, helpMenu;
     JMenuItem newItem, openItem, saveItem, exitItem;
     JMenuItem aboutItem;
 
-    // Dashboard Labels
+    //Dashboard
     JLabel budgetLabel, totalLabel, balanceLabel, statusLabel;
 
-    // Table Components
+    // Table components
     DefaultTableModel tableModel;
     JTable expenseTable;
 
-    // Bottom Buttons
+    // Bottom buttons
     JButton budgetButton, addButton, editButton, deleteButton, filterButton;
 
-    // Constructor
+    //Constructor
     public JavaProgramMenuTemplate() {
         super("Expense Tracker System - Code Panda");
         tracker = new ExpenseTracker();
         displayedExpenses = new ArrayList<>();
         setLayout(new BorderLayout(10, 10));
 
-        // Initialize Menu Bar
+        // Initialize Menubar
         menuBar = new JMenuBar();
         fileMenu = new JMenu("File");
         helpMenu = new JMenu("Help");
@@ -75,7 +75,7 @@ public class JavaProgramMenuTemplate extends JFrame implements ActionListener {
         menuBar.add(helpMenu);
         setJMenuBar(menuBar);
 
-        // Initialize Top Dashboard Panel (Module 7: GridLayout)
+        // Initialize top dashboard panel 
         JPanel dashboardPanel = new JPanel(new GridLayout(1, 3, 10, 0));
         budgetLabel = new JLabel("  Monthly Budget: PHP 0.00");
         totalLabel = new JLabel("Total Expenses: PHP 0.00");
@@ -85,14 +85,14 @@ public class JavaProgramMenuTemplate extends JFrame implements ActionListener {
         dashboardPanel.add(balanceLabel);
         add(dashboardPanel, BorderLayout.NORTH);
 
-        // Initialize Center Table (Module 8: DefaultTableModel + JTable)
+        // Initialize center table
         String[] columns = {"#", "Date", "Category", "Amount (PHP)", "Description"};
         tableModel = new DefaultTableModel(columns, 0);
         expenseTable = new JTable(tableModel);
         expenseTable.setDefaultEditor(Object.class, null);
         add(new JScrollPane(expenseTable), BorderLayout.CENTER);
 
-        // Initialize Bottom Buttons and Status Label (Module 7: FlowLayout & BorderLayout)
+        //Initialize Bottom buttons and status label
         JPanel southPanel = new JPanel(new BorderLayout());
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 5));
 
@@ -113,7 +113,7 @@ public class JavaProgramMenuTemplate extends JFrame implements ActionListener {
         southPanel.add(statusLabel, BorderLayout.SOUTH);
         add(southPanel, BorderLayout.SOUTH);
 
-        // Add Action Listeners
+        // Add Actionlisteners
         newItem.addActionListener(this);
         openItem.addActionListener(this);
         saveItem.addActionListener(this);
@@ -126,12 +126,12 @@ public class JavaProgramMenuTemplate extends JFrame implements ActionListener {
         deleteButton.addActionListener(this);
         filterButton.addActionListener(this);
 
-        // Load existing database records on startup
+        //Load existing database records on startup
         ExpenseFileManager.loadFromFile(tracker);
         refreshTable(tracker.getExpenses());
     }
 
-    // Refresh the JTable and Dashboard Labels
+    //Refresh the JTable and dashboard labels
     private void refreshTable(List<Expense> listToDisplay) {
         displayedExpenses = new ArrayList<>(listToDisplay);
         tableModel.setRowCount(0);
@@ -153,7 +153,7 @@ public class JavaProgramMenuTemplate extends JFrame implements ActionListener {
         balanceLabel.setText(String.format("Remaining Balance: PHP %.2f", tracker.getRemainingBalance()));
     }
 
-    // Set Monthly Budget Dialog
+    //Set monthly budget dialog
     private void handleSetBudget() {
         String input = JOptionPane.showInputDialog(this, "Enter Monthly Budget (PHP):", tracker.getMonthlyBudget());
         if (input == null) {
@@ -172,7 +172,7 @@ public class JavaProgramMenuTemplate extends JFrame implements ActionListener {
         }
     }
 
-    // Add or Update Expense Dialog
+    // add or Update expense dialog
     private void handleAddOrUpdateExpense(int editIndex) {
         JTextField amountField = new JTextField();
         JComboBox<ExpenseCategory> categoryBox = new JComboBox<>(ExpenseCategory.values());
@@ -376,7 +376,7 @@ public class JavaProgramMenuTemplate extends JFrame implements ActionListener {
         }
     }
 
-    // Main Method
+    // main
     public static void main(String[] args) {
         JavaProgramMenuTemplate gui = new JavaProgramMenuTemplate();
         gui.setSize(700, 450);
