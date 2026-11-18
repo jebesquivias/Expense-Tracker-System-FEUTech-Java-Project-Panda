@@ -5,7 +5,6 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.IOException;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeParseException;
@@ -63,8 +62,8 @@ public class JavaProgramMenuTemplate extends JFrame implements ActionListener {
         helpMenu = new JMenu("Help");
 
         newItem = new JMenuItem("New Session");
-        openItem = new JMenuItem("Open (Load expenses.txt)");
-        saveItem = new JMenuItem("Save (Save expenses.txt)");
+        openItem = new JMenuItem("Open (Load Database)");
+        saveItem = new JMenuItem("Save (Save Database)");
         exitItem = new JMenuItem("Exit");
         aboutItem = new JMenuItem("About");
 
@@ -137,14 +136,12 @@ public class JavaProgramMenuTemplate extends JFrame implements ActionListener {
         deleteButton.addActionListener(this);
         filterButton.addActionListener(this);
 
-        // Load existing file and database records on startup
+        // Load existing database records on startup
         try {
             ExpenseFileManager.loadFromFile(tracker);
             refreshTable(tracker.getExpenses());
-        } catch (IOException e1) {
-            statusLabel.setText(" Could not load file: " + e1.getMessage());
-        } catch (InvalidExpenseException e2) {
-            statusLabel.setText(" Invalid data in file: " + e2.getMessage());
+        } catch (InvalidExpenseException e1) {
+            statusLabel.setText(" Invalid data in database: " + e1.getMessage());
         }
     }
 
@@ -180,8 +177,7 @@ public class JavaProgramMenuTemplate extends JFrame implements ActionListener {
             double budget = Double.parseDouble(input.trim());
             tracker.setMonthlyBudget(budget);
             refreshTable(tracker.getExpenses());
-            ExpenseFileManager.saveInBackground(tracker);
-            statusLabel.setText(" Monthly budget updated and saved.");
+            statusLabel.setText(" Monthly budget updated.");
         } catch (NumberFormatException e1) {
             JOptionPane.showMessageDialog(this, "Please enter a valid numeric amount.", "Input Error", JOptionPane.ERROR_MESSAGE);
         } catch (InvalidExpenseException e2) {
@@ -232,7 +228,7 @@ public class JavaProgramMenuTemplate extends JFrame implements ActionListener {
                 }
                 refreshTable(tracker.getExpenses());
                 ExpenseFileManager.saveInBackground(tracker);
-                statusLabel.setText(" Auto-saved to expenses.txt");
+                statusLabel.setText(" Auto-saved to database.");
             } catch (NumberFormatException e1) {
                 JOptionPane.showMessageDialog(this, "Amount must be a valid number.", "Input Error", JOptionPane.ERROR_MESSAGE);
             } catch (DateTimeParseException e2) {
@@ -265,11 +261,11 @@ public class JavaProgramMenuTemplate extends JFrame implements ActionListener {
             tracker.deleteExpense(trackerIndex);
             refreshTable(tracker.getExpenses());
             ExpenseFileManager.saveInBackground(tracker);
-            statusLabel.setText(" Expense deleted and saved.");
+            statusLabel.setText(" Expense deleted and updated in database.");
         }
     }
 
-    // View and Filter Helper Methods (Triggered via Filter / Summary Button)
+    // View and Filter Helper Methods
     private void showAllExpenses() {
         refreshTable(tracker.getExpenses());
         statusLabel.setText(" Showing all expenses.");
@@ -364,19 +360,13 @@ public class JavaProgramMenuTemplate extends JFrame implements ActionListener {
             try {
                 ExpenseFileManager.loadFromFile(tracker);
                 refreshTable(tracker.getExpenses());
-                JOptionPane.showMessageDialog(this, "Expenses loaded from expenses.txt.", "Loaded", JOptionPane.INFORMATION_MESSAGE);
-            } catch (IOException e1) {
-                JOptionPane.showMessageDialog(this, "Load error: " + e1.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-            } catch (InvalidExpenseException e2) {
-                JOptionPane.showMessageDialog(this, "Validation error: " + e2.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Expenses loaded from database.", "Loaded", JOptionPane.INFORMATION_MESSAGE);
+            } catch (InvalidExpenseException e1) {
+                JOptionPane.showMessageDialog(this, "Validation error: " + e1.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         } else if (source == saveItem) {
-            try {
-                ExpenseFileManager.saveToFile(tracker);
-                JOptionPane.showMessageDialog(this, "Expenses saved to expenses.txt.", "Saved", JOptionPane.INFORMATION_MESSAGE);
-            } catch (IOException e1) {
-                JOptionPane.showMessageDialog(this, "Save error: " + e1.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-            }
+            ExpenseFileManager.saveToFile(tracker);
+            JOptionPane.showMessageDialog(this, "Expenses saved to database.", "Saved", JOptionPane.INFORMATION_MESSAGE);
         } else if (source == budgetButton) {
             handleSetBudget();
         } else if (source == addButton) {
