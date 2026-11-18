@@ -7,11 +7,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.time.LocalDate;
 import java.time.YearMonth;
-import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
@@ -26,7 +24,7 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
 
-// Main GUI Window for the Expense Tracker System
+// Main GUI Window for the Expense Tracker System (Module 7 & 8)
 public class JavaProgramMenuTemplate extends JFrame implements ActionListener {
 
     // Backend Controller
@@ -70,19 +68,16 @@ public class JavaProgramMenuTemplate extends JFrame implements ActionListener {
         fileMenu.add(newItem);
         fileMenu.add(openItem);
         fileMenu.add(saveItem);
-        fileMenu.addSeparator();
         fileMenu.add(exitItem);
-
         helpMenu.add(aboutItem);
 
         menuBar.add(fileMenu);
         menuBar.add(helpMenu);
         setJMenuBar(menuBar);
 
-        // Initialize Top Dashboard Panel
+        // Initialize Top Dashboard Panel (Module 7: GridLayout)
         JPanel dashboardPanel = new JPanel(new GridLayout(1, 3, 10, 0));
-        dashboardPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10));
-        budgetLabel = new JLabel("Monthly Budget: PHP 0.00");
+        budgetLabel = new JLabel("  Monthly Budget: PHP 0.00");
         totalLabel = new JLabel("Total Expenses: PHP 0.00");
         balanceLabel = new JLabel("Remaining Balance: PHP 0.00");
         dashboardPanel.add(budgetLabel);
@@ -90,18 +85,14 @@ public class JavaProgramMenuTemplate extends JFrame implements ActionListener {
         dashboardPanel.add(balanceLabel);
         add(dashboardPanel, BorderLayout.NORTH);
 
-        // Initialize Center Table
+        // Initialize Center Table (Module 8: DefaultTableModel + JTable)
         String[] columns = {"#", "Date", "Category", "Amount (PHP)", "Description"};
-        tableModel = new DefaultTableModel(columns, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
+        tableModel = new DefaultTableModel(columns, 0);
         expenseTable = new JTable(tableModel);
+        expenseTable.setDefaultEditor(Object.class, null);
         add(new JScrollPane(expenseTable), BorderLayout.CENTER);
 
-        // Initialize Bottom Buttons and Status Label
+        // Initialize Bottom Buttons and Status Label (Module 7: FlowLayout & BorderLayout)
         JPanel southPanel = new JPanel(new BorderLayout());
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 5));
 
@@ -122,14 +113,13 @@ public class JavaProgramMenuTemplate extends JFrame implements ActionListener {
         southPanel.add(statusLabel, BorderLayout.SOUTH);
         add(southPanel, BorderLayout.SOUTH);
 
-        // Add Action Listeners for Menu Items
+        // Add Action Listeners
         newItem.addActionListener(this);
         openItem.addActionListener(this);
         saveItem.addActionListener(this);
         exitItem.addActionListener(this);
         aboutItem.addActionListener(this);
 
-        // Add Action Listeners for Bottom Buttons
         budgetButton.addActionListener(this);
         addButton.addActionListener(this);
         editButton.addActionListener(this);
@@ -152,7 +142,7 @@ public class JavaProgramMenuTemplate extends JFrame implements ActionListener {
 
         for (int i = 0; i < displayedExpenses.size(); i++) {
             Expense expense = displayedExpenses.get(i);
-            Object[] row = {
+            Object[] row = new Object[]{
                 i + 1,
                 expense.getDate(),
                 expense.getCategory().getDisplayName(),
@@ -162,7 +152,7 @@ public class JavaProgramMenuTemplate extends JFrame implements ActionListener {
             tableModel.addRow(row);
         }
 
-        budgetLabel.setText(String.format("Monthly Budget: PHP %.2f", tracker.getMonthlyBudget()));
+        budgetLabel.setText(String.format("  Monthly Budget: PHP %.2f", tracker.getMonthlyBudget()));
         totalLabel.setText(String.format("Total Expenses: PHP %.2f", tracker.calculateTotal()));
         balanceLabel.setText(String.format("Remaining Balance: PHP %.2f", tracker.getRemainingBalance()));
     }
@@ -178,7 +168,7 @@ public class JavaProgramMenuTemplate extends JFrame implements ActionListener {
             tracker.setMonthlyBudget(budget);
             refreshTable(tracker.getExpenses());
             ExpenseFileManager.saveInBackground(tracker);
-            statusLabel.setText(" Monthly budget updated.");
+            statusLabel.setText(" Monthly budget updated and saved to database.");
         } catch (NumberFormatException e1) {
             JOptionPane.showMessageDialog(this, "Please enter a valid numeric amount.", "Input Error", JOptionPane.ERROR_MESSAGE);
         } catch (InvalidExpenseException e2) {
@@ -224,18 +214,19 @@ public class JavaProgramMenuTemplate extends JFrame implements ActionListener {
                 Expense expense = new Expense(amount, date, description, category);
                 if (editIndex < 0) {
                     tracker.addExpense(expense);
+                    ExpenseFileManager.saveInBackground(tracker);
                 } else {
                     tracker.updateExpense(editIndex, expense);
+                    ExpenseFileManager.updateExpenseInDB(editIndex + 1, expense);
                 }
                 refreshTable(tracker.getExpenses());
-                ExpenseFileManager.saveInBackground(tracker);
                 statusLabel.setText(" Auto-saved to database.");
             } catch (NumberFormatException e1) {
                 JOptionPane.showMessageDialog(this, "Amount must be a valid number.", "Input Error", JOptionPane.ERROR_MESSAGE);
-            } catch (DateTimeParseException e2) {
+            } catch (InvalidExpenseException e2) {
+                JOptionPane.showMessageDialog(this, e2.getMessage(), "Validation Error", JOptionPane.ERROR_MESSAGE);
+            } catch (Exception e3) {
                 JOptionPane.showMessageDialog(this, "Invalid date format. Use YYYY-MM-DD.", "Date Error", JOptionPane.ERROR_MESSAGE);
-            } catch (InvalidExpenseException e3) {
-                JOptionPane.showMessageDialog(this, e3.getMessage(), "Validation Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
@@ -292,7 +283,7 @@ public class JavaProgramMenuTemplate extends JFrame implements ActionListener {
             LocalDate date = LocalDate.parse(input.trim());
             refreshTable(tracker.filterByDate(date));
             statusLabel.setText(" Filtered by date: " + date);
-        } catch (DateTimeParseException e1) {
+        } catch (Exception e1) {
             JOptionPane.showMessageDialog(this, "Invalid date format. Use YYYY-MM-DD.", "Date Error", JOptionPane.ERROR_MESSAGE);
         }
     }
@@ -308,7 +299,8 @@ public class JavaProgramMenuTemplate extends JFrame implements ActionListener {
         for (ExpenseCategory category : ExpenseCategory.values()) {
             message += String.format("%-18s: PHP %.2f\n", category.getDisplayName(), breakdown.get(category));
         }
-        message += String.format("\nTotal Spent: PHP %.2f", tracker.calculateTotal());
+        message += String.format("\nTotal Spent: PHP %.2f\nUnique Active Days: %d",
+                tracker.calculateTotal(), tracker.getUniqueDates().size());
         JOptionPane.showMessageDialog(this, message, "Category Breakdown", JOptionPane.INFORMATION_MESSAGE);
     }
 
@@ -321,7 +313,7 @@ public class JavaProgramMenuTemplate extends JFrame implements ActionListener {
             YearMonth month = YearMonth.parse(input.trim());
             double total = tracker.getMonthlySummary(month);
             JOptionPane.showMessageDialog(this, String.format("Total expenses for %s: PHP %.2f", month, total), "Monthly Summary", JOptionPane.INFORMATION_MESSAGE);
-        } catch (DateTimeParseException e1) {
+        } catch (Exception e1) {
             JOptionPane.showMessageDialog(this, "Invalid month format. Use YYYY-MM.", "Month Error", JOptionPane.ERROR_MESSAGE);
         }
     }
@@ -329,75 +321,4 @@ public class JavaProgramMenuTemplate extends JFrame implements ActionListener {
     private void handleViewFilter() {
         String[] options = {"Show All", "Filter by Category", "Filter by Date", "Sort Highest to Lowest", "Category Breakdown", "Monthly Summary"};
         int choice = JOptionPane.showOptionDialog(this, "Choose a view or summary option:", "View & Filter Expenses",
-                JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
-        if (choice == 0) {
-            showAllExpenses();
-        } else if (choice == 1) {
-            filterByCategory();
-        } else if (choice == 2) {
-            filterByDate();
-        } else if (choice == 3) {
-            sortByAmount();
-        } else if (choice == 4) {
-            showCategoryBreakdown();
-        } else if (choice == 5) {
-            showMonthlySummary();
-        }
-    }
-
-    // Event Handler (ActionListener)
-    @Override
-    public void actionPerformed(ActionEvent event) {
-        Object source = event.getSource();
-
-        if (source == newItem) {
-            int confirm = JOptionPane.showConfirmDialog(this, "Clear all current expenses in memory?", "New Session", JOptionPane.YES_NO_OPTION);
-            if (confirm == JOptionPane.YES_OPTION) {
-                tracker.getExpenses().clear();
-                refreshTable(tracker.getExpenses());
-                statusLabel.setText(" Cleared session.");
-            }
-        } else if (source == openItem) {
-            try {
-                ExpenseFileManager.loadFromFile(tracker);
-                refreshTable(tracker.getExpenses());
-                JOptionPane.showMessageDialog(this, "Expenses loaded from database.", "Loaded", JOptionPane.INFORMATION_MESSAGE);
-            } catch (InvalidExpenseException e1) {
-                JOptionPane.showMessageDialog(this, "Validation error: " + e1.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-            }
-        } else if (source == saveItem) {
-            ExpenseFileManager.saveToFile(tracker);
-            JOptionPane.showMessageDialog(this, "Expenses saved to database.", "Saved", JOptionPane.INFORMATION_MESSAGE);
-        } else if (source == budgetButton) {
-            handleSetBudget();
-        } else if (source == addButton) {
-            handleAddOrUpdateExpense(-1);
-        } else if (source == editButton) {
-            int trackerIndex = getSelectedTrackerIndex();
-            if (trackerIndex < 0) {
-                JOptionPane.showMessageDialog(this, "Please select an expense row in the table to edit.", "No Selection", JOptionPane.WARNING_MESSAGE);
-            } else {
-                handleAddOrUpdateExpense(trackerIndex);
-            }
-        } else if (source == deleteButton) {
-            handleDeleteExpense();
-        } else if (source == filterButton) {
-            handleViewFilter();
-        } else if (source == aboutItem) {
-            JOptionPane.showMessageDialog(this,
-                    "Expense Tracker System\nCreated by Group Code Panda (CS0070L)\nHelps students budget and track daily expenses.",
-                    "About", JOptionPane.INFORMATION_MESSAGE);
-        } else if (source == exitItem) {
-            System.exit(0);
-        }
-    }
-
-    // Main Method
-    public static void main(String[] args) {
-        JavaProgramMenuTemplate gui = new JavaProgramMenuTemplate();
-        gui.setSize(700, 450);
-        gui.setLocationRelativeTo(null);
-        gui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        gui.setVisible(true);
-    }
-}
+                JOptionPane.DEFAULT_OPTION, JOption
